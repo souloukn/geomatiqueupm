@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://your-username.github.io/evaluation/sitemap.xml
+Sitemap: https://souloukn.github.io/geomatiqueupm/sitemap.xml
