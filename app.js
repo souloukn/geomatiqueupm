@@ -201,6 +201,319 @@ function setupEventListeners() {
     document.getElementById('send-reset-link-btn').addEventListener('click', handleSendResetLink);
     document.getElementById('reset-password-btn').addEventListener('click', handleResetPassword);
     
+    // Create account from login form
+    document.getElementById('create-account-from-login-btn').addEventListener('click', showCreateAccountForm);
+    
+    document.getElementById('teacher-submit-btn').addEventListener('click', handleTeacherLogin);
+    document.getElementById('student-submit-btn').addEventListener('click', handleStudentLogin);
+    
+    // Teacher dashboard events
+    document.getElementById('teacher-logout-btn').addEventListener('click', logout);
+    
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(tabBtn => {
+        tabBtn.addEventListener('click', () => {
+            const tabId = tabBtn.getAttribute('data-tab');
+            switchTab(tabId);
+            // Load results when switching to results tab
+            if (tabId === 'results') {
+                loadExamSelector();
+            }
+            // Load teacher info when switching to settings tab
+            if (tabId === 'settings') {
+                loadTeacherInfo();
+            }
+        });
+    });
+    
+    // Create exam button
+    document.getElementById('create-exam-btn').addEventListener('click', () => {
+        showExamForm();
+    });
+    
+    // Cancel exam form
+    document.getElementById('cancel-exam-form').addEventListener('click', () => {
+        showSection('teacher-dashboard');
+    });
+    
+    // Add question button
+    document.getElementById('add-question-btn').addEventListener('click', addQuestionField);
+    
+    // Exam form submission
+    document.getElementById('exam-form').addEventListener('submit', handleExamFormSubmit);
+    
+    // Submit exam button
+    document.getElementById('submit-exam-btn').addEventListener('click', submitExam);
+    document.getElementById('print-exam-btn').addEventListener('click', printExam);
+    
+    // Back to login button
+    document.getElementById('back-to-login').addEventListener('click', () => {
+        showSection('login');
+    });
+    
+    // Exam selector for results
+    document.getElementById('exam-selector').addEventListener('change', displayExamResults);
+    
+    // Publish results toggle
+    document.getElementById('publish-results-toggle').addEventListener('change', togglePublishResults);
+    
+    // Export buttons
+    document.querySelectorAll('.export-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const format = e.target.getAttribute('data-format');
+            if (format) {
+                exportResults(format);
+            } else if (e.target.id === 'print-results-btn') {
+                printResults();
+            }
+        });
+    });
+    
+    // Teacher info form submission
+    document.getElementById('teacher-info-form').addEventListener('submit', handleTeacherInfoSubmit);
+    
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    
+    // Language toggle
+    document.getElementById('language-toggle').addEventListener('click', toggleLanguage);
+}
+
+// Show a specific section
+function showSection(sectionId) {
+    // Hide all sections
+    Object.values(DOM).forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Show the requested section
+    switch(sectionId) {
+        case 'login':
+            DOM.loginSection.classList.remove('hidden');
+            break;
+        case 'teacher-dashboard':
+            DOM.teacherDashboard.classList.remove('hidden');
+            loadExamsTable();
+            loadExamSelector();
+            break;
+        case 'exam-form':
+            DOM.examFormSection.classList.remove('hidden');
+            break;
+        case 'student-exam':
+            DOM.studentExamSection.classList.remove('hidden');
+            break;
+        case 'exam-results':
+            DOM.examResultsSection.classList.remove('hidden');
+            break;
+    }
+}
+
+// Switch tabs in teacher dashboard
+function switchTab(tabId) {
+    // Update active tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    
+    // Show the selected tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+}
+
+// Handle developer code validation
+function handleDeveloperCodeValidation() {
+    const code = document.getElementById('developer-code').value;
+    
+    if (code === window.developerCode) {
+        // Valid developer code, show account creation or login options
+        document.getElementById('developer-code-form').classList.add('hidden');
+        
+        // Check if any teacher accounts exist
+        if (window.teacherAccounts.length > 0) {
+            // Show login form
+// Save data to localStorage
+function saveToLocalStorage() {
+    localStorage.setItem('exams', JSON.stringify(window.exams));
+    localStorage.setItem('examResults', JSON.stringify(window.examResults));
+    localStorage.setItem('teacherCode', window.teacherCode);
+    localStorage.setItem('developerCode', window.developerCode);
+}
+
+// Load data from localStorage
+function loadFromLocalStorage() {
+    window.exams = JSON.parse(localStorage.getItem('exams') || '[]');
+    window.examResults = JSON.parse(localStorage.getItem('examResults') || '[]');
+    window.teacherCode = localStorage.getItem('teacherCode');
+    window.developerCode = localStorage.getItem('developerCode');
+}
+
+// Initialize application
+function init() {
+    loadFromLocalStorage();
+    showSection('landing');
+    renderLogo();
+}
+
+// Show section based on name
+function showSection(sectionName) {
+    document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+    document.getElementById(sectionName).classList.remove('hidden');
+}
+
+// Render logo image
+function renderLogo() {
+    const logoImg = document.getElementById('logo-img');
+    if (window.developerCode === 'abc') {
+        logoImg.src = 'NewLogo.png';
+    } else {
+        logoImg.src = 'Logo.png';
+    }
+}
+
+// Show create account form
+function showCreateAccountForm() {
+    document.getElementById('teacher-account-login-form').classList.add('hidden');
+    document.getElementById('teacher-account-form').classList.remove('hidden');
+}
+
+// Handle teacher account creation
+function handleTeacherAccountCreation() {
+    const name = document.getElementById('new-teacher-name').value.trim();
+    const email = document.getElementById('new-teacher-email').value.trim();
+    const password = document.getElementById('new-teacher-password').value;
+    const confirmPassword = document.getElementById('confirm-teacher-password').value;
+    
+    // Validation
+    if (!name || !email || !password || !confirmPassword) {
+        alert('Veuillez remplir tous les champs.');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Les mots de passe ne correspondent pas.');
+        return;
+    }
+    
+    // Check if email already exists
+    if (window.teacherAccounts.some(account => account.email === email)) {
+        alert('Un compte avec cet email existe déjà.');
+        return;
+    }
+    
+    // Create new account
+    const newAccount = {
+        id: Date.now().toString(),
+        name: name,
+        email: email,
+        password: password, // In a real app, this should be hashed
+        createdAt: new Date().toISOString()
+    };
+    
+    window.teacherAccounts.push(newAccount);
+    saveToLocalStorage();
+    
+    // Clear form
+    document.getElementById('new-teacher-name').value = '';
+    document.getElementById('new-teacher-email').value = '';
+    document.getElementById('new-teacher-password').value = '';
+    document.getElementById('confirm-teacher-password').value = '';
+    
+    alert('Compte créé avec succès! Vous pouvez maintenant vous connecter.');
+    
+    // Show login form
+    document.getElementById('teacher-account-form').classList.add('hidden');
+    document.getElementById('teacher-account-login-form').classList.remove('hidden');
+}
+
+// Handle teacher account login
+function handleTeacherAccountLogin() {
+    const email = document.getElementById('teacher-account-email').value.trim();
+    const password = document.getElementById('teacher-account-password').value;
+    
+    // Validation
+    if (!email || !password) {
+        alert('Veuillez remplir tous les champs.');
+        return;
+    }
+    
+    // Find account
+    const account = window.teacherAccounts.find(acc => acc.email === email && acc.password === password);
+    
+    if (account) {
+        AppState.currentUser = { 
+            role: 'teacher',
+            accountId: account.id,
+            name: account.name,
+            email: account.email
+        };
+        
+        // Clear form
+        document.getElementById('teacher-account-email').value = '';
+        document.getElementById('teacher-account-password').value = '';
+        
+        showSection('teacher-dashboard');
+    } else {
+        alert('Email ou mot de passe incorrect.');
+    }
+}
+
+// Show forgot password form
+function showForgotPasswordForm() {
+    document.getElementById('teacher-account-login-form').classList.add('hidden');
+    document.getElementById('forgot-password-form').classList.remove('hidden');
+}
+    localStorage.setItem('teacherAccounts', JSON.stringify(window.teacherAccounts));
+    localStorage.setItem('teacherInfo', JSON.stringify(window.teacherInfo));
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Login section events
+    document.getElementById('teacher-login-btn').addEventListener('click', () => {
+        document.querySelector('.role-selection').classList.add('hidden');
+        // Show the developer code form first
+        document.getElementById('developer-code-form').classList.remove('hidden');
+    });
+    
+    document.getElementById('student-login-btn').addEventListener('click', () => {
+        document.querySelector('.role-selection').classList.add('hidden');
+        document.getElementById('student-login-form').classList.remove('hidden');
+    });
+    
+    // Back buttons
+    document.querySelectorAll('.back-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelector('.role-selection').classList.remove('hidden');
+            document.getElementById('teacher-login-form').classList.add('hidden');
+            document.getElementById('developer-code-form').classList.add('hidden');
+            document.getElementById('teacher-account-form').classList.add('hidden');
+            document.getElementById('teacher-account-login-form').classList.add('hidden');
+            document.getElementById('student-login-form').classList.add('hidden');
+            document.getElementById('forgot-password-form').classList.add('hidden');
+            document.getElementById('reset-password-form').classList.add('hidden');
+        });
+    });
+    
+    // Developer code validation
+    document.getElementById('developer-code-btn').addEventListener('click', handleDeveloperCodeValidation);
+    
+    // Teacher account creation
+    document.getElementById('create-teacher-account-btn').addEventListener('click', handleTeacherAccountCreation);
+    
+    // Teacher account login
+    document.getElementById('teacher-account-login-btn').addEventListener('click', handleTeacherAccountLogin);
+    
+    // Forgot password
+    document.getElementById('forgot-password-btn').addEventListener('click', showForgotPasswordForm);
+    document.getElementById('send-reset-link-btn').addEventListener('click', handleSendResetLink);
+    document.getElementById('reset-password-btn').addEventListener('click', handleResetPassword);
+    
+    // Create account from login form
+    document.getElementById('create-account-from-login-btn').addEventListener('click', showCreateAccountForm);
+    
     document.getElementById('teacher-submit-btn').addEventListener('click', handleTeacherLogin);
     document.getElementById('student-submit-btn').addEventListener('click', handleStudentLogin);
     
@@ -426,6 +739,12 @@ function handleTeacherAccountLogin() {
 function showForgotPasswordForm() {
     document.getElementById('teacher-account-login-form').classList.add('hidden');
     document.getElementById('forgot-password-form').classList.remove('hidden');
+}
+
+// Show create account form
+function showCreateAccountForm() {
+    document.getElementById('teacher-account-login-form').classList.add('hidden');
+    document.getElementById('teacher-account-form').classList.remove('hidden');
 }
 
 // Handle send reset link
