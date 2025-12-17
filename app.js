@@ -182,6 +182,8 @@ function setupEventListeners() {
             document.getElementById('teacher-account-form').classList.add('hidden');
             document.getElementById('teacher-account-login-form').classList.add('hidden');
             document.getElementById('student-login-form').classList.add('hidden');
+            document.getElementById('forgot-password-form').classList.add('hidden');
+            document.getElementById('reset-password-form').classList.add('hidden');
         });
     });
     
@@ -193,6 +195,11 @@ function setupEventListeners() {
     
     // Teacher account login
     document.getElementById('teacher-account-login-btn').addEventListener('click', handleTeacherAccountLogin);
+    
+    // Forgot password
+    document.getElementById('forgot-password-btn').addEventListener('click', showForgotPasswordForm);
+    document.getElementById('send-reset-link-btn').addEventListener('click', handleSendResetLink);
+    document.getElementById('reset-password-btn').addEventListener('click', handleResetPassword);
     
     document.getElementById('teacher-submit-btn').addEventListener('click', handleTeacherLogin);
     document.getElementById('student-submit-btn').addEventListener('click', handleStudentLogin);
@@ -415,6 +422,86 @@ function handleTeacherAccountLogin() {
     }
 }
 
+// Show forgot password form
+function showForgotPasswordForm() {
+    document.getElementById('teacher-account-login-form').classList.add('hidden');
+    document.getElementById('forgot-password-form').classList.remove('hidden');
+}
+
+// Handle send reset link
+function handleSendResetLink() {
+    const email = document.getElementById('reset-email').value.trim();
+    
+    if (!email) {
+        alert('Veuillez entrer votre email.');
+        return;
+    }
+    
+    // Check if email exists in teacher accounts
+    const account = window.teacherAccounts.find(acc => acc.email === email);
+    
+    if (account) {
+        // In a real application, you would send an email with a reset link
+        // For this demo, we'll simulate the reset link by showing the reset form
+        alert(`Un lien de réinitialisation a été envoyé à ${email}.`);
+        
+        // Store the email for reset process
+        sessionStorage.setItem('resetEmail', email);
+        
+        // Show reset password form
+        document.getElementById('forgot-password-form').classList.add('hidden');
+        document.getElementById('reset-password-form').classList.remove('hidden');
+    } else {
+        alert('Aucun compte trouvé avec cet email.');
+    }
+}
+
+// Handle reset password
+function handleResetPassword() {
+    const newPassword = document.getElementById('new-password').value;
+    const confirmNewPassword = document.getElementById('confirm-new-password').value;
+    const email = sessionStorage.getItem('resetEmail');
+    
+    if (!email) {
+        alert('Session expirée. Veuillez recommencer le processus.');
+        showSection('login');
+        return;
+    }
+    
+    if (!newPassword || !confirmNewPassword) {
+        alert('Veuillez remplir tous les champs.');
+        return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+        alert('Les mots de passe ne correspondent pas.');
+        return;
+    }
+    
+    // Find the account and update the password
+    const accountIndex = window.teacherAccounts.findIndex(acc => acc.email === email);
+    
+    if (accountIndex !== -1) {
+        window.teacherAccounts[accountIndex].password = newPassword;
+        saveToLocalStorage();
+        
+        // Clear session storage
+        sessionStorage.removeItem('resetEmail');
+        
+        alert('Votre mot de passe a été réinitialisé avec succès!');
+        
+        // Show login form
+        document.getElementById('reset-password-form').classList.add('hidden');
+        document.getElementById('teacher-account-login-form').classList.remove('hidden');
+        
+        // Clear form fields
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-new-password').value = '';
+    } else {
+        alert('Erreur lors de la réinitialisation du mot de passe.');
+    }
+}
+
 // Handle teacher login (original method)
 function handleTeacherLogin() {
     const code = document.getElementById('teacher-code').value;
@@ -503,13 +590,6 @@ function applyTheme() {
     themeBtn.title = AppState.theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 
-// Toggle language function
-function toggleLanguage() {
-    AppState.language = AppState.language === 'fr' ? 'en' : 'fr';
-    localStorage.setItem('language', AppState.language);
-    applyLanguage();
-}
-
 // Apply language function
 function applyLanguage() {
     const elements = document.querySelectorAll('[data-i18n]');
@@ -549,6 +629,13 @@ function updateStaticText() {
     }
     
     // Update other static text elements as needed
+}
+
+// Toggle language function
+function toggleLanguage() {
+    AppState.language = AppState.language === 'fr' ? 'en' : 'fr';
+    localStorage.setItem('language', AppState.language);
+    applyLanguage();
 }
 
 // Load exams table in teacher dashboard
