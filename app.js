@@ -157,6 +157,8 @@ function saveToLocalStorage() {
     localStorage.setItem('developerCode', window.developerCode);
     localStorage.setItem('teacherAccounts', JSON.stringify(window.teacherAccounts));
     localStorage.setItem('teacherInfo', JSON.stringify(window.teacherInfo));
+    localStorage.setItem('language', AppState.language);
+    localStorage.setItem('theme', AppState.theme);
 }
 
 // Setup event listeners
@@ -341,77 +343,6 @@ function handleDeveloperCodeValidation() {
         }
     } else {
         alert('Code développeur invalide!');
-    }
-}
-
-// Save data to localStorage
-function saveToLocalStorage() {
-    localStorage.setItem('exams', JSON.stringify(window.exams));
-    localStorage.setItem('examResults', JSON.stringify(window.examResults));
-    localStorage.setItem('teacherCode', window.teacherCode);
-    localStorage.setItem('developerCode', window.developerCode);
-    localStorage.setItem('teacherAccounts', JSON.stringify(window.teacherAccounts));
-    localStorage.setItem('teacherInfo', JSON.stringify(window.teacherInfo));
-}
-
-// Load data from localStorage
-function loadFromLocalStorage() {
-    // Load exams
-    const examsData = localStorage.getItem('exams');
-    if (examsData) {
-        window.exams = JSON.parse(examsData);
-    } else {
-        window.exams = [];
-    }
-    
-    // Load exam results
-    const examResultsData = localStorage.getItem('examResults');
-    if (examResultsData) {
-        window.examResults = JSON.parse(examResultsData);
-    } else {
-        window.examResults = {};
-    }
-    
-    // Load teacher code (in a real app, this would be more secure)
-    const teacherCodeData = localStorage.getItem('teacherCode');
-    if (teacherCodeData) {
-        window.teacherCode = teacherCodeData;
-    } else {
-        // Pre-generated teacher code
-        window.teacherCode = 'TEACHER123';
-        localStorage.setItem('teacherCode', window.teacherCode);
-    }
-    
-    // Load developer code
-    const developerCodeData = localStorage.getItem('developerCode');
-    if (developerCodeData) {
-        window.developerCode = developerCodeData;
-    } else {
-        // Pre-generated developer code
-        window.developerCode = 'DEV789';
-        localStorage.setItem('developerCode', window.developerCode);
-    }
-    
-    // Load teacher accounts
-    const teacherAccountsData = localStorage.getItem('teacherAccounts');
-    if (teacherAccountsData) {
-        window.teacherAccounts = JSON.parse(teacherAccountsData);
-    } else {
-        window.teacherAccounts = [];
-    }
-    
-    // Load teacher information
-    const teacherInfoData = localStorage.getItem('teacherInfo');
-    if (teacherInfoData) {
-        window.teacherInfo = JSON.parse(teacherInfoData);
-    } else {
-        window.teacherInfo = {};
-    }
-    
-    // Set logo path
-    const logoImg = document.querySelector('.app-logo');
-    if (logoImg) {
-        logoImg.src = 'Logo.png';
     }
 }
 
@@ -597,24 +528,131 @@ function handleTeacherLogin() {
 
 // Handle student login
 function handleStudentLogin() {
-    const email = document.getElementById('student-email').value;
-    const password = document.getElementById('student-password').value;
-    
-    // Validation
-    if (!email || !password) {
-        alert('Veuillez remplir tous les champs.');
+    const examCode = document.getElementById('exam-code').value.trim();
+    const studentLastname = document.getElementById('student-lastname').value.trim();
+    const studentFirstname = document.getElementById('student-firstname').value.trim();
+    const studentId = document.getElementById('student-id').value.trim();
+    const studentGender = document.getElementById('student-gender').value;
+
+    // Validation des champs requis
+    if (!examCode || !studentLastname || !studentFirstname || !studentId || !studentGender) {
+        alert('Veuillez remplir tous les champs obligatoires.');
         return;
     }
-    
-    // Check if student account exists
-    if (window.studentAccounts.some(student => student.email === email && student.password === password)) {
-        AppState.currentUser = { role: 'student' };
-        showSection('student-dashboard');
-        document.getElementById('student-email').value = '';
-        document.getElementById('student-password').value = '';
-    } else {
-        alert('Email ou mot de passe incorrect.');
+
+    // Find the exam with the given code
+    const exam = window.exams.find(e => e.code === examCode);
+
+    if (!exam) {
+        alert('Code d\'épreuve invalide!');
+        return;
     }
+
+    // Check if student has already taken this exam
+    if (window.examResults[exam.id]) {
+        const studentResult = window.examResults[exam.id].find(r => r.studentId === studentId);
+        if (studentResult) {
+            alert('Vous avez déjà passé cette épreuve avec ce matricule.');
+            return;
+        }
+    }
+
+    // Set current exam and student with complete information
+    AppState.currentExam = exam;
+    AppState.currentUser = {
+        role: 'student',
+        id: studentId,
+        lastname: studentLastname,
+        firstname: studentFirstname,
+        gender: studentGender
+    };
+
+    // Display the exam
+    displayExam(exam);
+    showSection('student-exam');
+
+    // Clear form fields
+    document.getElementById('exam-code').value = '';
+    document.getElementById('student-lastname').value = '';
+    document.getElementById('student-firstname').value = '';
+    document.getElementById('student-id').value = '';
+    document.getElementById('student-gender').value = '';
+}
+
+// Logout function
+function logout() {
+    AppState.currentUser = null;
+    AppState.currentExam = null;
+    showSection('login');
+}
+
+// Toggle theme function
+function toggleTheme() {
+    AppState.theme = AppState.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', AppState.theme);
+    applyTheme();
+}
+
+// Apply theme function
+function applyTheme() {
+    document.body.className = AppState.theme + '-theme';
+    const themeBtn = document.getElementById('theme-toggle');
+    themeBtn.innerHTML = AppState.theme === 'dark' ? '☀️' : '🌙';
+    themeBtn.title = AppState.theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+}
+
+// Apply language function
+function applyLanguage() {
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[AppState.language] && translations[AppState.language][key]) {
+            element.textContent = translations[AppState.language][key];
+        }
+    });
+    
+    const langBtn = document.getElementById('language-toggle');
+    langBtn.innerHTML = AppState.language === 'fr' ? 'EN' : 'FR';
+    langBtn.title = AppState.language === 'fr' ? 'Switch to English' : 'Passer en français';
+    
+    // Update the animated title specifically
+    const titleElement = document.getElementById('app-title');
+    if (titleElement) {
+        titleElement.textContent = translations[AppState.language].appTitle;
+    }
+    
+    // Update static text elements
+    updateStaticText();
+}
+
+// Update static text elements based on language
+function updateStaticText() {
+    // Update student form title
+    const studentFormTitle = document.getElementById('student-form-title');
+    if (studentFormTitle) {
+        studentFormTitle.textContent = AppState.language === 'fr' ? 'Informations de l\'étudiant' : 'Student Information';
+    }
+    
+    // Update gender options
+    const genderSelect = document.getElementById('student-gender');
+    if (genderSelect) {
+        const currentValue = genderSelect.value;
+        genderSelect.innerHTML = `
+            <option value="">${AppState.language === 'fr' ? 'Sélectionner le genre' : 'Select Gender'}</option>
+            <option value="M">${AppState.language === 'fr' ? 'Masculin' : 'Male'}</option>
+            <option value="F">${AppState.language === 'fr' ? 'Féminin' : 'Female'}</option>
+        `;
+        genderSelect.value = currentValue;
+    }
+    
+    // Update other static text elements as needed
+}
+
+// Toggle language function
+function toggleLanguage() {
+    AppState.language = AppState.language === 'fr' ? 'en' : 'fr';
+    localStorage.setItem('language', AppState.language);
+    applyLanguage();
 }
 
 // Setup event listeners
@@ -810,6 +848,8 @@ function saveToLocalStorage() {
     localStorage.setItem('developerCode', window.developerCode);
     localStorage.setItem('teacherAccounts', JSON.stringify(window.teacherAccounts));
     localStorage.setItem('teacherInfo', JSON.stringify(window.teacherInfo));
+    localStorage.setItem('language', AppState.language);
+    localStorage.setItem('theme', AppState.theme);
 }
 
 // Load data from localStorage

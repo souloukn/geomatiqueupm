@@ -187,6 +187,8 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-lg);
+    position: relative;
+    overflow: hidden;
 }
 
 .header-controls {
@@ -232,12 +234,54 @@ header {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-h1 {
+.animated-title {
     font-size: var(--font-size-xl);
     margin-bottom: 0;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
     letter-spacing: 0.5px;
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(90deg, var(--primary), var(--info));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.animated-title:hover {
+    transform: scale(1.02);
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes titleEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animated-title {
+    animation: titleEntrance 0.8s ease-out forwards, gradientShift 3s ease infinite;
 }
 
 h2 {
