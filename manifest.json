@@ -1,0 +1,16 @@
+{
+  "name": "Outil d'évaluation des étudiants",
+  "short_name": "Évaluation",
+  "description": "Application web d'évaluation pédagogique",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#539bf5",
+  "icons": [
+    {
+      "src": "Logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

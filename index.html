@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Application web d'évaluation pédagogique">
+    <meta name="theme-color" content="#539bf5">
+    <title>Outil d'évaluation des étudiants</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="Logo.png" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="Logo.png" alt="Logo" class="app-logo">
+            </div>
+            <h1 id="app-title">Outil d'évaluation des étudiants</h1>
+            <div class="header-controls">
+                <button id="theme-toggle" class="control-btn" title="Basculer thème">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button id="language-toggle" class="control-btn" title="Changer langue">
+                    <span id="lang-text">FR</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Login Section -->
+        <section id="login-section">
+            <div class="login-container">
+                <h2>Connexion</h2>
+                <div class="role-selection">
+                    <button id="teacher-login-btn" class="role-btn">Enseignant</button>
+                    <button id="student-login-btn" class="role-btn">Étudiant</button>
+                </div>
+                
+                <!-- Teacher Login Form -->
+                <div id="teacher-login-form" class="login-form hidden">
+                    <h3>Connexion Enseignant</h3>
+                    <input type="password" id="teacher-code" placeholder="Code enseignant" />
+                    <button id="teacher-submit-btn">Se connecter</button>
+                    <button class="back-btn">Retour</button>
+                </div>
+                
+                <!-- Student Login Form -->
+                <div id="student-login-form" class="login-form hidden">
+                    <h3 id="student-form-title">Informations de l'étudiant</h3>
+                    <input type="text" id="exam-code" placeholder="Code d'épreuve" required />
+                    <input type="text" id="student-lastname" placeholder="Nom" required />
+                    <input type="text" id="student-firstname" placeholder="Prénom" required />
+                    <input type="text" id="student-id" placeholder="Matricule étudiant" required />
+                    <select id="student-gender" required>
+                        <option value="">Sélectionner le genre</option>
+                        <option value="M">Masculin</option>
+                        <option value="F">Féminin</option>
+                    </select>
+                    <button id="student-submit-btn">Accéder à l'épreuve</button>
+                    <button class="back-btn">Retour</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Teacher Dashboard -->
+        <section id="teacher-dashboard" class="hidden">
+            <div class="dashboard-header">
+                <h2>Interface Enseignant</h2>
+                <button id="teacher-logout-btn">Déconnexion</button>
+            </div>
+            
+            <div class="dashboard-content">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="exams">Gestion des épreuves</button>
+                    <button class="tab-btn" data-tab="results">Résultats</button>
+                    <button class="tab-btn" data-tab="settings">Paramètres</button>
+                </div>
+                
+                <!-- Exams Tab -->
+                <div id="exams-tab" class="tab-content active">
+                    <button id="create-exam-btn" class="action-btn">Créer une nouvelle épreuve</button>
+                    
+                    <div id="exams-list">
+                        <h3>Liste des épreuves</h3>
+                        <table id="exams-table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Université</th>
+                                    <th>Faculté</th>
+                                    <th>Département</th>
+                                    <th>Matière</th>
+                                    <th>Classe</th>
+                                    <th>Code</th>
+                                    <th>Durée</th>
+                                    <th>Tentatives max</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Exam rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="settings-tab" class="tab-content hidden">
+                    <h3>Informations de l'enseignant</h3>
+                    <form id="teacher-info-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="teacher-lastname">Nom *</label>
+                                <input type="text" id="teacher-lastname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher-firstname">Prénom *</label>
+                                <input type="text" id="teacher-firstname" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacher-id">Matricule *</label>
+                            <input type="text" id="teacher-id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacher-department">Département</label>
+                            <input type="text" id="teacher-department">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit">Enregistrer les informations</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Results Tab -->
+                <div id="results-tab" class="tab-content hidden">
+                    <h3>Résultats des épreuves</h3>
+                    <select id="exam-selector">
+                        <option value="">Sélectionnez une épreuve</option>
+                        <!-- Options will be populated here -->
+                    </select>
+                    
+                    <div id="results-container">
+                        <table id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Score</th>
+                                    <th>Temps utilisé</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Results will be populated here -->
+                            </tbody>
+                        </table>
+                        
+                        <div class="export-options">
+                            <h4>Exporter les résultats :</h4>
+                            <button id="print-results-btn" class="export-btn">🖨️ Imprimer</button>
+                            <button class="export-btn" data-format="excel">Excel (.xlsx)</button>
+                            <button class="export-btn" data-format="word">Word (.docx)</button>
+                            <button class="export-btn" data-format="pdf">PDF (.pdf)</button>
+                        </div>
+                        
+                        <div class="publish-results">
+                            <label>
+                                <input type="checkbox" id="publish-results-toggle"> 
+                                Autoriser l'affichage des résultats aux étudiants
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create/Edit Exam Form -->
+        <section id="exam-form-section" class="hidden">
+            <div class="form-container">
+                <h2 id="form-title">Créer une nouvelle épreuve</h2>
+                <form id="exam-form">
+                    <div class="form-group">
+                        <label for="exam-title">Titre de l'épreuve *</label>
+                        <input type="text" id="exam-title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exam-description">Description</label>
+                        <textarea id="exam-description"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exam-university">Université *</label>
+                            <input type="text" id="exam-university" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exam-faculty">Faculté *</label>
+                            <input type="text" id="exam-faculty" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exam-department">Département *</label>
+                            <input type="text" id="exam-department" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exam-subject">Matière *</label>
+                            <input type="text" id="exam-subject" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exam-class">Classe/Groupe *</label>
+                            <input type="text" id="exam-class" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exam-duration">Durée (minutes) *</label>
+                            <input type="number" id="exam-duration" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exam-start-date">Date de disponibilité</label>
+                            <input type="datetime-local" id="exam-start-date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Questions</label>
+                        <div id="questions-container">
+                            <!-- Questions will be added here dynamically -->
+                        </div>
+                        <button type="button" id="add-question-btn">Ajouter une question</button>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit">Enregistrer l'épreuve</button>
+                        <button type="button" id="cancel-exam-form">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Student Exam Interface -->
+        <section id="student-exam-section" class="hidden">
+            <div class="exam-header">
+                <h2 id="exam-title-display"></h2>
+                <div class="exam-timer">
+                    <span>Temps restant : </span>
+                    <span id="timer">--:--</span>
+                </div>
+            </div>
+            
+            <div class="exam-content">
+                <div id="questions-display">
+                    <!-- Questions will be displayed here -->
+                </div>
+                
+                <div class="exam-actions">
+                    <button id="print-exam-btn" style="margin-right: 20px; background: #95a5a6;">🖨️ Imprimer l'examen</button>
+                    <button id="submit-exam-btn">Soumettre l'épreuve</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exam Results Display -->
+        <section id="exam-results-section" class="hidden">
+            <div class="results-container">
+                <h2>Résultats de votre épreuve</h2>
+                <div id="results-display">
+                    <!-- Results will be displayed here -->
+                </div>
+                <button id="back-to-login">Retour à l'accueil</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
