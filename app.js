@@ -2582,6 +2582,216 @@ function exportToWord(exam, results) {
     URL.revokeObjectURL(url);
 }
 
+function exportToPDF(exam, results) {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    const teacherInfo = window.teacherInfo || {};
+
+    // Generate HTML content for PDF matching the university format
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>NOTE DE CONTRÔLE CONTINU - ${exam.title}</title>
+            <style>
+                @page {
+                    margin: 1.5cm;
+                }
+                body { 
+                    font-family: 'Times New Roman', Times, serif; 
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 11pt;
+                    line-height: 1.4;
+                }
+                .header-container {
+                    display: table;
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+                .header-left {
+                    display: table-cell;
+                    width: 33%;
+                    vertical-align: top;
+                    text-align: left;
+                }
+                .header-center {
+                    display: table-cell;
+                    width: 34%;
+                    vertical-align: top;
+                    text-align: center;
+                }
+                .header-right {
+                    display: table-cell;
+                    width: 33%;
+                    vertical-align: top;
+                    text-align: right;
+                }
+                .header-left p, .header-right p {
+                    margin: 2px 0;
+                    font-size: 10pt;
+                    font-weight: bold;
+                }
+                .logo { 
+                    max-height: 70px; 
+                    width: auto;
+                }
+                .dotted-line {
+                    border-top: 2px dotted #000;
+                    margin: 15px 0;
+                }
+                .title-section {
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .title-section h1 {
+                    font-size: 14pt;
+                    font-weight: bold;
+                    margin: 10px 0;
+                    text-decoration: underline;
+                }
+                .title-section h2 {
+                    font-size: 12pt;
+                    font-weight: normal;
+                    margin: 5px 0;
+                }
+                .results-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 10pt;
+                }
+                .results-table th,
+                .results-table td {
+                    border: 1px solid #000;
+                    padding: 8px 6px;
+                    text-align: center;
+                }
+                .results-table th {
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 9pt;
+                }
+                .results-table th.green-header {
+                    background-color: #90c050;
+                    color: #000;
+                }
+                .results-table td:first-child {
+                    text-align: left;
+                    padding-left: 10px;
+                }
+                .signature-section {
+                    margin-top: 50px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .signature-box {
+                    width: 45%;
+                    text-align: center;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 60px;
+                    padding-top: 5px;
+                }
+                @media print { 
+                    .no-print { display: none !important; }
+                    body { 
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .results-table th.green-header {
+                        background-color: #90c050 !important;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <div class="header-left">
+                    <p>${exam.university || 'Université Polytechnique de Mongo'}</p>
+                    <p>${exam.faculty || 'Faculté des Mines et Géologie'}</p>
+                    <p>${exam.department || 'Département de Géomatique'}</p>
+                </div>
+                <div class="header-center">
+                    <img src="Logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                </div>
+                <div class="header-right">
+                    <p>Année académique 2025-2026</p>
+                </div>
+            </div>
+            
+            <div class="dotted-line"></div>
+            
+            <div class="title-section">
+                <h1>NOTE DE CONTRÔLE CONTINU</h1>
+                <h2>${exam.subject || exam.title}</h2>
+            </div>
+
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th class="green-header">NOM ET PRÉNOMS</th>
+                        <th>MATRICULE</th>
+                        <th>CC</th>
+                        <th>Participation</th>
+                        <th>Note finale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${results.map((result, index) => {
+                        const examScore = (result.score / result.totalPoints) * 20;
+                        const participation = (Math.random() * 5).toFixed(1);
+                        const finalNote = (parseFloat(examScore.toFixed(1)) + parseFloat(participation)).toFixed(1);
+                        return `
+                            <tr>
+                                <td>${result.studentLastname} ${result.studentFirstname}</td>
+                                <td>${result.studentId}</td>
+                                <td>${examScore.toFixed(1)}</td>
+                                <td>${participation}</td>
+                                <td>${finalNote}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <div class="signature-section">
+                <div class="signature-box">
+                    <p><strong>Le Chef de Département</strong></p>
+                    <div class="signature-line"></div>
+                </div>
+                <div class="signature-box">
+                    <p><strong>L'Enseignant</strong></p>
+                    <div class="signature-line">
+                        <p style="margin-top: 5px;">${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px; font-size: 10pt; font-style: italic;">
+                <p>Fait à l'Université, le 19 décembre 2025</p>
+            </div>
+
+            <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
+                <button onclick="window.print()" style="padding: 12px 25px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">📄 Imprimer</button>
+                <button onclick="window.close()" style="padding: 12px 25px; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">✖ Fermer</button>
+            </div>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    };
+}
+
 // Print results directly
 function printResults() {
     const examId = document.getElementById('exam-selector').value;
