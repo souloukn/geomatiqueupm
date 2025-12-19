@@ -1816,6 +1816,7 @@ function displayExamResults() {
         document.querySelector('#results-table tbody').innerHTML = '';
         // Reset publish toggle
         document.getElementById('publish-results-toggle').checked = false;
+        document.getElementById('results-container').style.display = 'none';
         return;
     }
     
@@ -1825,16 +1826,22 @@ function displayExamResults() {
     
     if (results.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="4" class="no-results">Aucun résultat disponible pour cette épreuve</td>`;
+        row.innerHTML = `<td colspan="6" class="no-results">Aucun résultat disponible pour cette épreuve</td>`;
         tbody.appendChild(row);
     } else {
-        results.forEach(result => {
+        results.forEach((result, index) => {
             const row = document.createElement('tr');
+            const percentage = Math.round((result.score / result.totalPoints) * 100);
+            const passStatus = percentage >= 50 ? 'Admis' : 'Ajourné';
+            const statusClass = percentage >= 50 ? 'status-pass' : 'status-fail';
+            
             row.innerHTML = `
+                <td>${index + 1}</td>
                 <td>${result.studentId}</td>
-                <td>${result.score} / ${result.totalPoints}</td>
-                <td>${Math.round(result.timeUsed)} min</td>
-                <td>Terminé</td>
+                <td>${result.studentLastname || 'N/A'} ${result.studentFirstname || ''}</td>
+                <td>${result.score} / ${result.totalPoints} (${percentage}%)</td>
+                <td>${Math.round(result.timeUsed) || 0} min</td>
+                <td><span class="status-badge ${statusClass}">${passStatus}</span></td>
             `;
             tbody.appendChild(row);
         });
@@ -1850,6 +1857,9 @@ function displayExamResults() {
     
     // Make sure the results container is visible
     document.getElementById('results-container').style.display = 'block';
+    
+    // Log for debugging
+    console.log(`Displaying results for exam ${examId}:`, results);
 }
 
 // Toggle publish results
@@ -1972,62 +1982,145 @@ function exportToPDF(exam, results) {
         <head>
             <title>Résultats - ${exam.title}</title>
             <style>
+                @page {
+                    margin: 1.5cm;
+                }
                 body { 
-                    font-family: Arial, sans-serif; 
-                    margin: 20px; 
+                    font-family: 'Times New Roman', Times, serif; 
+                    margin: 0;
+                    padding: 20px;
                     position: relative;
-                    background-image: url('Logo.png');
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    background-size: 30%;
-                    background-opacity: 0.1;
+                    font-size: 11pt;
+                    line-height: 1.6;
                 }
                 .watermark {
                     position: fixed;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-45deg);
-                    opacity: 0.1;
+                    opacity: 0.08;
                     z-index: -1;
-                    width: 50%;
+                    width: 60%;
+                    pointer-events: none;
                 }
                 .header {
                     text-align: center;
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
+                    border-bottom: 3px double #000;
+                    padding-bottom: 15px;
+                    margin-bottom: 25px;
                 }
                 .logo-section {
                     text-align: center;
-                    margin-bottom: 15px;
+                    margin-bottom: 12px;
                 }
-                .logo { max-height: 60px; width: auto; }
+                .logo { 
+                    max-height: 70px; 
+                    width: auto;
+                }
                 .university-info {
                     text-align: center;
+                    line-height: 1.4;
                 }
                 .university-name {
-                    font-size: 18pt;
+                    font-size: 16pt;
                     font-weight: bold;
-                    margin-bottom: 8px;
+                    margin: 5px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
                 .faculty-info {
-                    font-size: 14pt;
-                    margin-bottom: 4px;
+                    font-size: 12pt;
+                    margin: 3px 0;
+                    font-weight: 500;
                 }
                 .exam-title-section {
                     text-align: center;
-                    margin: 20px 0;
+                    margin: 25px 0;
                     clear: both;
                 }
+                .exam-title-section h1 {
+                    font-size: 14pt;
+                    font-weight: bold;
+                    margin: 10px 0;
+                    text-decoration: underline;
+                    text-transform: uppercase;
+                }
+                .exam-title-section h2 {
+                    font-size: 13pt;
+                    font-weight: bold;
+                    margin: 8px 0;
+                }
+                .exam-info {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+                .exam-info p {
+                    margin: 5px 0;
+                    font-size: 11pt;
+                }
+                .results-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 10pt;
+                }
+                .results-table th,
+                .results-table td {
+                    border: 1px solid #333;
+                    padding: 10px 8px;
+                    text-align: center;
+                }
+                .results-table th {
+                    background-color: #e8e8e8;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 9pt;
+                }
+                .results-table tbody tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .teacher-info {
+                    margin-top: 40px;
+                    padding: 15px;
+                    border-top: 2px solid #000;
+                }
+                .teacher-info p {
+                    margin: 5px 0;
+                    font-size: 10pt;
+                }
+                .signature-section {
+                    margin-top: 50px;
+                    display: flex;
+                    justify-content: space-between;
+                    page-break-inside: avoid;
+                }
+                .signature-box {
+                    width: 45%;
+                    text-align: center;
+                }
+                .signature-box p {
+                    margin: 5px 0;
+                    font-size: 11pt;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 60px;
+                    padding-top: 5px;
+                }
                 @media print { 
-                    .no-print { display: none; }
+                    .no-print { display: none !important; }
                     body { 
-                        background-image: url('Logo.png');
-                        background-repeat: no-repeat;
-                        background-position: center;
-                        background-size: 30%;
-                        background-opacity: 0.1;
                         -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .results-table th {
+                        background-color: #e8e8e8 !important;
+                    }
+                    .results-table tbody tr:nth-child(even) {
+                        background-color: #f9f9f9 !important;
                     }
                 }
             </style>
@@ -2127,9 +2220,26 @@ function exportToPDF(exam, results) {
                 ${teacherInfo.department ? `<p><strong>Département:</strong> ${teacherInfo.department}</p>` : ''}
             </div>
 
-            <div class="no-print" style="margin-top: 30px; text-align: center;">
-                <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">Imprimer</button>
-                <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">Fermer</button>
+            <div class="signature-section">
+                <div class="signature-box">
+                    <p><strong>Le Chef de Département</strong></p>
+                    <div class="signature-line"></div>
+                </div>
+                <div class="signature-box">
+                    <p><strong>L'Enseignant</strong></p>
+                    <div class="signature-line">
+                        <p style="margin-top: 5px;">${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px; font-size: 10pt; font-style: italic;">
+                <p>Fait à ${exam.university ? exam.university.split(' ')[0] : ''}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            </div>
+
+            <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
+                <button onclick="window.print()" style="padding: 12px 25px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">📄 Imprimer</button>
+                <button onclick="window.close()" style="padding: 12px 25px; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">✖ Fermer</button>
             </div>
         </body>
         </html>
@@ -2149,34 +2259,37 @@ function exportToPDF(exam, results) {
 function exportToExcel(exam, results) {
     // Create CSV content for Excel with proper format
     const teacherInfo = window.teacherInfo || {};
-    let csvContent = 'data:text/csv;charset=utf-8,';
+    let csvContent = 'data:text/csv;charset=utf-8,\uFEFF'; // Add BOM for UTF-8
 
     // Add header information
     csvContent += `"NOTE DE CONTROLE CONTINU"\n`;
     csvContent += `"${exam.title}"\n\n`;
-    csvContent += `"Université: ${exam.university || 'Université XYZ'}"\n`;
-    csvContent += `"Faculté: ${exam.faculty || 'Faculté ABC'}"\n`;
-    csvContent += `"Département: ${exam.department || 'Département DEF'}"\n`;
-    csvContent += `"Matière: ${exam.subject || exam.title}"\n`;
-    csvContent += `"Classe: ${exam.class || 'Classe GHI'}"\n`;
-    csvContent += `"Enseignant: ${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}"\n`;
-    csvContent += `"Date d'exportation: ${new Date().toLocaleDateString('fr-FR')}"\n\n`;
+    csvContent += `"Université:","${exam.university || 'Université XYZ'}"\n`;
+    csvContent += `"Faculté:","${exam.faculty || 'Faculté ABC'}"\n`;
+    csvContent += `"Département:","${exam.department || 'Département DEF'}"\n`;
+    csvContent += `"Matière:","${exam.subject || exam.title}"\n`;
+    csvContent += `"Classe:","${exam.class || 'Classe GHI'}"\n`;
+    csvContent += `"Enseignant:","${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}"\n`;
+    csvContent += `"Date d'exportation:","${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}"\n\n`;
 
-    // Add teacher info
-    csvContent += `"Enseignant: ${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}"\n`;
-    csvContent += `"Matricule: ${teacherInfo.id || ''}"\n`;
-    if (teacherInfo.email) csvContent += `"Email: ${teacherInfo.email}"\n`;
-    if (teacherInfo.department) csvContent += `"Département: ${teacherInfo.department}"\n`;
+    // Add teacher info section
+    csvContent += `"INFORMATIONS ENSEIGNANT"\n`;
+    csvContent += `"Nom complet:","${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}"\n`;
+    csvContent += `"Matricule:","${teacherInfo.id || 'N/A'}"\n`;
+    if (teacherInfo.email) csvContent += `"Email:","${teacherInfo.email}"\n`;
+    if (teacherInfo.department) csvContent += `"Département:","${teacherInfo.department}"\n`;
     csvContent += '\n';
 
-    // Add table headers with required columns
-    csvContent += '"Nom","Prénom","Matricule","Genre","Note de CC ou examen","Note de participation","Note finale","Pourcentage","Mention","Date"\n';
+    // Add table headers with all required columns
+    csvContent += '"N°","Nom","Prénom","Matricule","Genre","Email","Téléphone","Note CC/Examen (/20)","Note Participation (/5)","Note Finale (/25)","Pourcentage","Mention","Date"\n';
 
-    // Add actual student results
+    // Add student results
     if (results && results.length > 0) {
-        results.forEach(result => {
-            const score = (result.score / exam.questions.length) * 20;
-            const percentage = Math.round((result.score / exam.questions.length) * 100);
+        results.forEach((result, index) => {
+            const examScore = (result.score / result.totalPoints) * 20;
+            const percentage = Math.round((result.score / result.totalPoints) * 100);
+            
+            // Calculate mention
             let mention = 'Échec';
             if (percentage >= 90) mention = 'Excellent';
             else if (percentage >= 80) mention = 'Très Bien';
@@ -2184,22 +2297,45 @@ function exportToExcel(exam, results) {
             else if (percentage >= 60) mention = 'Assez Bien';
             else if (percentage >= 50) mention = 'Passable';
 
-            // For demonstration, generate participation grade (in real app, this would come from data)
+            // Generate participation grade (placeholder - in real app would come from data)
             const participationGrade = (Math.random() * 5).toFixed(2);
-            const finalGrade = (parseFloat(score.toFixed(2)) + parseFloat(participationGrade)).toFixed(2);
+            const finalGrade = (parseFloat(examScore.toFixed(2)) + parseFloat(participationGrade)).toFixed(2);
 
-            csvContent += `"${result.studentLastname}","${result.studentFirstname}","${result.studentId}","${result.studentGender || 'N/A'}","${result.studentEmail || ''}","${result.studentPhone || ''}","${score.toFixed(2)}/20","${participationGrade}/5","${finalGrade}/25","${percentage}%","${mention}","${new Date(result.completedAt).toLocaleDateString('fr-FR')}"\n`;
+            csvContent += `"${index + 1}","${result.studentLastname || ''}","${result.studentFirstname || ''}","${result.studentId || ''}","${result.studentGender || 'N/A'}","${result.studentEmail || 'N/A'}","${result.studentPhone || 'N/A'}","${examScore.toFixed(2)}","${participationGrade}","${finalGrade}","${percentage}%","${mention}","${new Date(result.completedAt).toLocaleDateString('fr-FR')}"\n`;
         });
     } else {
-        // If no results, add sample data
-        generateSampleStudentData().forEach(student => {
+        // Add sample data if no results
+        generateSampleStudentData().forEach((student, index) => {
             const examGrade = (Math.random() * 20).toFixed(2);
             const participationGrade = (Math.random() * 5).toFixed(2);
             const finalGrade = (parseFloat(examGrade) + parseFloat(participationGrade)).toFixed(2);
+            const percentage = Math.round((parseFloat(examGrade) / 20) * 100);
+            
+            let mention = 'Échec';
+            if (percentage >= 90) mention = 'Excellent';
+            else if (percentage >= 80) mention = 'Très Bien';
+            else if (percentage >= 70) mention = 'Bien';
+            else if (percentage >= 60) mention = 'Assez Bien';
+            else if (percentage >= 50) mention = 'Passable';
 
-            csvContent += `"${student.lastname}","${student.firstname}","${student.id}","${student.gender}","${examGrade}/20","${participationGrade}/5","${finalGrade}/25","N/A","N/A","N/A"\n`;
+            csvContent += `"${index + 1}","${student.lastname}","${student.firstname}","${student.id}","${student.gender}","N/A","N/A","${examGrade}","${participationGrade}","${finalGrade}","${percentage}%","${mention}","N/A"\n`;
         });
     }
+
+    // Add statistics section
+    csvContent += '\n"STATISTIQUES"\n';
+    const scores = results && results.length > 0 
+        ? results.map(r => (r.score / r.totalPoints) * 20)
+        : generateSampleStudentData().map(() => Math.random() * 20);
+    
+    const avgScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
+    const maxScore = Math.max(...scores).toFixed(2);
+    const minScore = Math.min(...scores).toFixed(2);
+    
+    csvContent += `"Moyenne de classe:","${avgScore}/20"\n`;
+    csvContent += `"Note maximale:","${maxScore}/20"\n`;
+    csvContent += `"Note minimale:","${minScore}/20"\n`;
+    csvContent += `"Nombre d'étudiants:","${scores.length}"\n`;
 
     // Create download link
     const encodedUri = encodeURI(csvContent);
@@ -2220,63 +2356,132 @@ function exportToWord(exam, results) {
         <head>
             <meta charset="utf-8">
             <title>NOTE DE CONTROLE CONTINU - ${exam.title}</title>
-            <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotPromoteQF/><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
+            <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotPromoteQF/><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
             <style>
+                @page {
+                    margin: 2.5cm;
+                    mso-header-margin: 1.5cm;
+                    mso-footer-margin: 1.5cm;
+                }
                 body {
                     font-family: 'Times New Roman', Times, serif;
-                    margin: 1in;
-                    font-size: 12pt;
+                    margin: 0;
+                    font-size: 11pt;
+                    line-height: 1.5;
                     position: relative;
                 }
                 .header {
                     text-align: center;
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
+                    border-bottom: 3px double #000;
+                    padding-bottom: 15px;
+                    margin-bottom: 25px;
                 }
                 .logo-section {
                     text-align: center;
-                    margin-bottom: 15px;
+                    margin-bottom: 12px;
                 }
                 .logo {
-                    height: 80px;
+                    height: 70px;
                     width: auto;
                 }
                 .university-info {
                     text-align: center;
                 }
                 .university-name {
-                    font-size: 18pt;
+                    font-size: 16pt;
                     font-weight: bold;
-                    margin-bottom: 8px;
+                    margin: 5px 0;
+                    text-transform: uppercase;
                 }
                 .faculty-info {
-                    font-size: 14pt;
-                    margin-bottom: 4px;
+                    font-size: 12pt;
+                    margin: 3px 0;
+                    font-weight: 500;
                 }
                 .exam-title-section {
                     text-align: center;
-                    margin: 20px 0;
+                    margin: 25px 0;
                     clear: both;
+                }
+                .exam-title-section h1 {
+                    font-size: 14pt;
+                    font-weight: bold;
+                    margin: 10px 0;
+                    text-decoration: underline;
+                }
+                .exam-title-section h2 {
+                    font-size: 13pt;
+                    font-weight: bold;
+                    margin: 8px 0;
+                }
+                .exam-info {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                }
+                .exam-info p {
+                    margin: 5px 0;
+                }
+                .results-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 10pt;
+                }
+                .results-table th,
+                .results-table td {
+                    border: 1px solid #333;
+                    padding: 8px;
+                    text-align: center;
+                }
+                .results-table th {
+                    background-color: #e8e8e8;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 9pt;
+                }
+                .results-table tbody tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .teacher-info {
+                    margin-top: 30px;
+                    padding: 15px;
+                    border-top: 2px solid #000;
+                }
+                .signature-section {
+                    margin-top: 50px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .signature-box {
+                    width: 45%;
+                    text-align: center;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 60px;
+                    padding-top: 5px;
                 }
                 .watermark {
                     position: fixed;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-45deg);
-                    opacity: 0.1;
+                    opacity: 0.08;
                     z-index: -1;
-                    width: 50%;
+                    width: 60%;
                 }
             </style>
         </head>
         <body>
+            <img src="Logo.png" class="watermark" onerror="this.style.display='none'">
             <div class="header">
                 <div class="logo-section">
                     <img src="Logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
                 </div>
                 <div class="university-info">
-                    <div class="university-name">${exam.university || 'Université XYZ'}</div>
+                    <div class="university-name">${exam.university || 'UNIVERSITÉ XYZ'}</div>
                     <div class="faculty-info">${exam.faculty || 'Faculté ABC'}</div>
                     <div class="faculty-info">${exam.department || 'Département DEF'}</div>
                 </div>
@@ -2290,7 +2495,7 @@ function exportToWord(exam, results) {
                 <p><strong>Matière:</strong> ${exam.subject || exam.title}</p>
                 <p><strong>Classe:</strong> ${exam.class || 'Classe GHI'}</p>
                 <p><strong>Enseignant:</strong> ${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
-                <p><strong>Date d'exportation:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+                <p><strong>Date d'exportation:</strong> ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             </div>
 
             <table class="results-table">
@@ -2308,8 +2513,8 @@ function exportToWord(exam, results) {
                 </thead>
                 <tbody>
                     ${results && results.length > 0 ? results.map((result, index) => {
-                        const score = (result.score / exam.questions.length) * 20;
-                        const percentage = Math.round((result.score / exam.questions.length) * 100);
+                        const score = (result.score / result.totalPoints) * 20;
+                        const percentage = Math.round((result.score / result.totalPoints) * 100);
                         let mention = 'Échec';
                         if (percentage >= 90) mention = 'Excellent';
                         else if (percentage >= 80) mention = 'Très Bien';
@@ -2329,7 +2534,6 @@ function exportToWord(exam, results) {
                             </tr>
                         `;
                     }).join('') : generateSampleStudentData().map((student, index) => {
-                        // Generate sample grades for demonstration when no results
                         const examGrade = (Math.random() * 20).toFixed(2);
                         const percentage = Math.round((parseFloat(examGrade) / 20) * 100);
                         let mention = 'Échec';
@@ -2360,12 +2564,29 @@ function exportToWord(exam, results) {
                 ${teacherInfo.email ? `<p><strong>Email:</strong> ${teacherInfo.email}</p>` : ''}
                 ${teacherInfo.department ? `<p><strong>Département:</strong> ${teacherInfo.department}</p>` : ''}
             </div>
+
+            <div class="signature-section">
+                <div class="signature-box">
+                    <p><strong>Le Chef de Département</strong></p>
+                    <div class="signature-line"></div>
+                </div>
+                <div class="signature-box">
+                    <p><strong>L'Enseignant</strong></p>
+                    <div class="signature-line">
+                        <p style="margin-top: 5px;">${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px; font-style: italic;">
+                <p>Fait à ${exam.university ? exam.university.split(' ')[0] : ''}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            </div>
         </body>
         </html>
     `;
 
     // Create blob and download
-    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -2402,102 +2623,153 @@ function printResults() {
         <html>
         <head>
             <title>NOTE DE CONTROLE CONTINU - ${exam.title}</title>
-            <link rel="stylesheet" href="styles.css">
             <style>
+                @page {
+                    margin: 2cm;
+                    size: A4;
+                }
                 @media print {
-                    body { print-color-adjust: exact; }
+                    body { 
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
                     .no-print { display: none !important; }
+                    .results-table th {
+                        background-color: #e8e8e8 !important;
+                    }
+                    .results-table tbody tr:nth-child(even) {
+                        background-color: #f9f9f9 !important;
+                    }
                 }
                 body {
                     font-family: 'Times New Roman', serif;
-                    font-size: 12pt;
-                    line-height: 1.4;
+                    font-size: 11pt;
+                    line-height: 1.5;
                     margin: 0;
                     padding: 20px;
                     position: relative;
-                    background-image: url('Logo.png');
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    background-size: 30%;
-                    background-opacity: 0.1;
+                    color: #000;
                 }
                 .watermark {
                     position: fixed;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-45deg);
-                    opacity: 0.1;
+                    opacity: 0.08;
                     z-index: -1;
-                    width: 50%;
+                    width: 60%;
+                    pointer-events: none;
                 }
                 .header {
                     text-align: center;
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
+                    border-bottom: 3px double #000;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
                 }
                 .logo-section {
                     text-align: center;
-                    margin-bottom: 15px;
+                    margin-bottom: 10px;
                 }
                 .logo {
-                    height: 80px;
+                    height: 70px;
                     width: auto;
                 }
                 .university-info {
                     text-align: center;
+                    line-height: 1.4;
                 }
                 .university-name {
-                    font-size: 18pt;
+                    font-size: 16pt;
                     font-weight: bold;
-                    margin-bottom: 8px;
+                    margin: 5px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
                 .faculty-info {
-                    font-size: 14pt;
-                    margin-bottom: 4px;
+                    font-size: 12pt;
+                    margin: 3px 0;
+                    font-weight: 500;
                 }
                 .exam-title {
-                    font-size: 16pt;
+                    font-size: 14pt;
                     font-weight: bold;
                     text-align: center;
                     margin: 20px 0;
                     text-decoration: underline;
+                    text-transform: uppercase;
                 }
                 .exam-details {
                     margin: 20px 0;
-                    padding: 10px;
-                    border: 1px solid #000;
+                    padding: 15px;
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+                .exam-details p {
+                    margin: 5px 0;
+                    font-size: 11pt;
                 }
                 .results-table {
                     width: 100%;
                     border-collapse: collapse;
                     margin: 20px 0;
-                    font-size: 11pt;
+                    font-size: 10pt;
                 }
                 .results-table th,
                 .results-table td {
-                    border: 1px solid #000;
-                    padding: 8px;
-                    text-align: left;
+                    border: 1px solid #333;
+                    padding: 10px 6px;
+                    text-align: center;
                 }
                 .results-table th {
-                    background-color: #f0f0f0;
+                    background-color: #e8e8e8;
                     font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 9pt;
+                }
+                .results-table tbody tr:nth-child(even) {
+                    background-color: #f9f9f9;
                 }
                 .signature-section {
                     margin-top: 50px;
                     display: flex;
                     justify-content: space-between;
+                    page-break-inside: avoid;
                 }
                 .signature-box {
-                    width: 200px;
+                    width: 45%;
                     text-align: center;
+                }
+                .signature-box p {
+                    margin: 5px 0;
+                    font-size: 11pt;
+                }
+                .signature-line {
                     border-top: 1px solid #000;
-                    padding-top: 10px;
+                    margin-top: 60px;
+                    padding-top: 5px;
                 }
                 .date-section {
                     text-align: right;
                     margin-top: 20px;
+                    font-style: italic;
+                    font-size: 10pt;
+                }
+                .statistics {
+                    margin-top: 30px;
+                    padding: 15px;
+                    background: #f0f0f0;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }
+                .statistics h3 {
+                    margin-top: 0;
+                    font-size: 12pt;
+                    text-decoration: underline;
+                }
+                .statistics p {
+                    margin: 5px 0;
+                    font-size: 10pt;
                 }
             </style>
         </head>
@@ -2508,7 +2780,7 @@ function printResults() {
                     <img src="Logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
                 </div>
                 <div class="university-info">
-                    <div class="university-name">${exam.university || 'Université XYZ'}</div>
+                    <div class="university-name">${exam.university || 'UNIVERSITÉ XYZ'}</div>
                     <div class="faculty-info">${exam.faculty || 'Faculté ABC'}</div>
                     <div class="faculty-info">${exam.department || 'Département DEF'}</div>
                 </div>
@@ -2519,7 +2791,7 @@ function printResults() {
                 <p><strong>Matière:</strong> ${exam.subject || exam.title}</p>
                 <p><strong>Classe:</strong> ${exam.class || 'Classe GHI'}</p>
                 <p><strong>Enseignant:</strong> ${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
-                <p><strong>Date d'exportation:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+                <p><strong>Date d'exportation:</strong> ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             </div>
 
             <table class="results-table">
@@ -2528,6 +2800,7 @@ function printResults() {
                         <th>N°</th>
                         <th>Nom et Prénom</th>
                         <th>Matricule</th>
+                        <th>Genre</th>
                         <th>Note/20</th>
                         <th>Pourcentage</th>
                         <th>Mention</th>
@@ -2536,8 +2809,8 @@ function printResults() {
                 </thead>
                 <tbody>
                     ${results.map((result, index) => {
-                        const score = (result.score / exam.questions.length) * 20;
-                        const percentage = Math.round((result.score / exam.questions.length) * 100);
+                        const score = (result.score / result.totalPoints) * 20;
+                        const percentage = Math.round((result.score / result.totalPoints) * 100);
                         let mention = 'Échec';
                         if (percentage >= 90) mention = 'Excellent';
                         else if (percentage >= 80) mention = 'Très Bien';
@@ -2549,6 +2822,7 @@ function printResults() {
                                 <td>${index + 1}</td>
                                 <td>${result.studentLastname} ${result.studentFirstname}</td>
                                 <td>${result.studentId}</td>
+                                <td>${result.studentGender || 'N/A'}</td>
                                 <td>${score.toFixed(2)}</td>
                                 <td>${percentage}%</td>
                                 <td>${mention}</td>
@@ -2559,18 +2833,35 @@ function printResults() {
                 </tbody>
             </table>
 
+            <div class="statistics">
+                <h3>STATISTIQUES DE LA CLASSE</h3>
+                <p><strong>Nombre d'étudiants:</strong> ${results.length}</p>
+                <p><strong>Moyenne de classe:</strong> ${(results.reduce((sum, r) => sum + (r.score / r.totalPoints * 20), 0) / results.length).toFixed(2)}/20</p>
+                <p><strong>Note maximale:</strong> ${Math.max(...results.map(r => r.score / r.totalPoints * 20)).toFixed(2)}/20</p>
+                <p><strong>Note minimale:</strong> ${Math.min(...results.map(r => r.score / r.totalPoints * 20)).toFixed(2)}/20</p>
+                <p><strong>Taux de réussite:</strong> ${Math.round(results.filter(r => (r.score / r.totalPoints * 100) >= 50).length / results.length * 100)}%</p>
+            </div>
+
             <div class="signature-section">
                 <div class="signature-box">
-                    <p>Le Chef de Département</p>
+                    <p><strong>Le Chef de Département</strong></p>
+                    <div class="signature-line"></div>
                 </div>
                 <div class="signature-box">
-                    <p>L'Enseignant</p>
-                    <p>${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
+                    <p><strong>L'Enseignant</strong></p>
+                    <div class="signature-line">
+                        <p style="margin-top: 5px;">${teacherInfo.firstname || ''} ${teacherInfo.lastname || ''}</p>
+                    </div>
                 </div>
             </div>
 
             <div class="date-section">
-                <p>Fait à ${exam.university?.split(' ')[0] || 'Lieu'}, le ${new Date().toLocaleDateString('fr-FR')}</p>
+                <p>Fait à ${exam.university ? exam.university.split(' ')[0] : ''}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            </div>
+
+            <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
+                <button onclick="window.print()" style="padding: 12px 25px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">📄 Imprimer</button>
+                <button onclick="window.close()" style="padding: 12px 25px; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">✖ Fermer</button>
             </div>
         </body>
         </html>
@@ -2595,67 +2886,246 @@ function printExam() {
     }
 
     const printWindow = window.open('', '_blank');
+    const student = AppState.currentUser;
 
     const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
             <title>${exam.title} - Examen</title>
-            <link rel="stylesheet" href="styles.css">
             <style>
+                @page {
+                    margin: 2cm;
+                    size: A4;
+                }
                 @media print {
-                    body { print-color-adjust: exact; }
+                    body { 
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
                     .exam-timer { display: none !important; }
                     .exam-actions { display: none !important; }
+                    .no-print { display: none !important; }
+                }
+                body {
+                    font-family: 'Times New Roman', serif;
+                    font-size: 11pt;
+                    line-height: 1.5;
+                    margin: 0;
+                    padding: 15px;
+                    color: #000;
+                }
+                .header {
+                    background: white;
+                    border: 3px double #000;
+                    margin-bottom: 20px;
+                    padding: 15px;
+                    text-align: center;
+                }
+                .logo-container {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .app-logo {
+                    height: 60px;
+                }
+                h1 {
+                    color: black;
+                    font-size: 18pt;
+                    margin: 10px 0;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                }
+                .exam-header-info {
+                    margin: 15px 0;
+                    padding: 15px;
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    text-align: left;
+                }
+                .exam-header-info p {
+                    margin: 5px 0;
+                    font-size: 10pt;
+                }
+                .student-info {
+                    margin: 20px 0;
+                    padding: 15px;
+                    border: 2px solid #000;
+                    background: #fff;
+                }
+                .student-info p {
+                    margin: 8px 0;
+                    font-size: 11pt;
+                }
+                .student-info .fill-line {
+                    display: inline-block;
+                    min-width: 300px;
+                    border-bottom: 1px solid #000;
+                    margin-left: 10px;
+                }
+                .exam-content {
+                    background: white;
+                    border: 1px solid #000;
+                    padding: 20px;
+                    margin-top: 20px;
+                }
+                .question-item {
+                    margin-bottom: 25px;
+                    padding-bottom: 20px;
+                    border-bottom: 1px solid #ccc;
+                    page-break-inside: avoid;
+                }
+                .question-item:last-child {
+                    border-bottom: none;
+                }
+                .question-text {
+                    font-size: 11pt;
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                    color: black;
+                    background: #f5f5f5;
+                    padding: 12px;
+                    border-left: 4px solid #333;
+                }
+                .question-points {
+                    color: #555;
+                    font-style: italic;
+                    font-size: 10pt;
+                }
+                .options-container {
+                    margin-left: 20px;
+                }
+                .option-item {
+                    margin-bottom: 12px;
+                    padding: 10px;
+                    background: white;
+                    border: 1px solid #ddd;
+                }
+                .option-item label {
+                    display: block;
+                    cursor: default;
+                    font-size: 11pt;
+                    color: black;
+                }
+                .option-item input[type="radio"] {
+                    margin-right: 10px;
+                    width: 16px;
+                    height: 16px;
+                }
+                .exam-footer {
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 2px solid #000;
+                    text-align: center;
+                }
+                .signature-section {
+                    margin-top: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .signature-box {
+                    width: 45%;
+                    text-align: center;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 50px;
+                    padding-top: 5px;
+                }
+                .instructions {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #ffffcc;
+                    border: 2px solid #ffcc00;
+                    border-radius: 5px;
+                }
+                .instructions h3 {
+                    margin-top: 0;
+                    font-size: 12pt;
+                }
+                .instructions ul {
+                    margin: 10px 0;
+                    padding-left: 20px;
+                }
+                .instructions li {
+                    margin: 5px 0;
+                    font-size: 10pt;
                 }
             </style>
         </head>
         <body>
-            <div class="container">
-                <header style="background: white; border: 2px solid #000; border-radius: 0; box-shadow: none; margin-bottom: 20px; padding: 15px;">
-                    <div class="logo-container">
-                        <img src="Logo.png" alt="Logo" class="app-logo" style="height: 50px;">
-                    </div>
-                    <h1 style="color: black; text-shadow: none; font-size: 24px;">${exam.title}</h1>
-                </header>
+            <div class="header">
+                <div class="logo-container">
+                    <img src="Logo.png" alt="Logo" class="app-logo" onerror="this.style.display='none'">
+                </div>
+                <h1>${exam.title}</h1>
+                <div class="exam-header-info">
+                    <p><strong>Université:</strong> ${exam.university || 'N/A'}</p>
+                    <p><strong>Faculté:</strong> ${exam.faculty || 'N/A'}</p>
+                    <p><strong>Département:</strong> ${exam.department || 'N/A'}</p>
+                    <p><strong>Matière:</strong> ${exam.subject || 'N/A'}</p>
+                    <p><strong>Classe:</strong> ${exam.class || 'N/A'}</p>
+                    <p><strong>Durée:</strong> ${exam.duration} minutes</p>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+            </div>
 
-                <div class="exam-content" style="background: white; border: 1px solid #000; border-radius: 0; box-shadow: none; padding: 20px;">
-                    <div style="margin-bottom: 20px;">
-                        <p><strong>Université:</strong> ${exam.university || ''}</p>
-                        <p><strong>Faculté:</strong> ${exam.faculty || ''}</p>
-                        <p><strong>Département:</strong> ${exam.department || ''}</p>
-                        <p><strong>Matière:</strong> ${exam.subject || ''}</p>
-                        <p><strong>Classe:</strong> ${exam.class || ''}</p>
-                        <p><strong>Durée:</strong> ${exam.duration} minutes</p>
-                        <p><strong>Nom de l'étudiant:</strong> ___________________________</p>
-                        <p><strong>Matricule:</strong> ___________________________</p>
-                        <p><strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
-                    </div>
+            <div class="instructions">
+                <h3>📝 INSTRUCTIONS</h3>
+                <ul>
+                    <li>Lisez attentivement chaque question avant de répondre</li>
+                    <li>Cochez une seule réponse par question</li>
+                    <li>Vérifiez vos réponses avant de soumettre</li>
+                    <li>Aucune correction ne sera acceptée après la soumission</li>
+                    <li>Durée totale de l'examen: ${exam.duration} minutes</li>
+                </ul>
+            </div>
 
-                    ${exam.questions.map((question, index) => `
-                        <div class="question-item" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ccc; page-break-inside: avoid;">
-                            <div class="question-text" style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: black; background: #f9f9f9; padding: 15px; border-radius: 0;">
-                                ${index + 1}. ${question.text}
-                            </div>
+            <div class="student-info">
+                <p><strong>Nom de l'étudiant:</strong> <span class="fill-line">${student ? student.lastname + ' ' + student.firstname : ''}</span></p>
+                <p><strong>Matricule:</strong> <span class="fill-line">${student ? student.id : ''}</span></p>
+                <p><strong>Genre:</strong> <span class="fill-line">${student && student.gender ? (student.gender === 'M' ? 'Masculin' : 'Féminin') : ''}</span></p>
+            </div>
 
-                            <div class="options-container" style="margin-left: 20px;">
-                                ${question.options.map((option, optionIndex) => `
-                                    <div style="margin-bottom: 10px; padding: 10px; background: white; border: 1px solid #ddd; border-radius: 0;">
-                                        <label style="display: block; cursor: default; font-size: 13px; color: black;">
-                                            <input type="radio" name="question-${index}" value="${optionIndex}" style="margin-right: 10px;">
-                                            <span>${String.fromCharCode(65 + optionIndex)}. ${option}</span>
-                                        </label>
-                                    </div>
-                                `).join('')}
-                            </div>
+            <div class="exam-content">
+                ${exam.questions.map((question, index) => `
+                    <div class="question-item">
+                        <div class="question-text">
+                            <strong>Question ${index + 1}.</strong> ${question.text}
+                            <div class="question-points">(${question.points} point${question.points > 1 ? 's' : ''})</div>
                         </div>
-                    `).join('')}
 
-                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #000; text-align: center;">
-                        <p><strong>Fin de l'examen</strong></p>
-                        <p style="margin-top: 20px;">Signature de l'étudiant: ___________________________</p>
+                        <div class="options-container">
+                            ${question.options.map((option, optionIndex) => `
+                                <div class="option-item">
+                                    <label>
+                                        <input type="radio" name="question-${index}" value="${optionIndex}">
+                                        <strong>${String.fromCharCode(65 + optionIndex)}.</strong> ${option.text}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="exam-footer">
+                <p><strong>FIN DE L'EXAMEN</strong></p>
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <p><strong>Signature de l'étudiant</strong></p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p><strong>Signature du surveillant</strong></p>
+                        <div class="signature-line"></div>
                     </div>
                 </div>
+            </div>
+
+            <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
+                <button onclick="window.print()" style="padding: 12px 25px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">📄 Imprimer</button>
+                <button onclick="window.close()" style="padding: 12px 25px; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">✖ Fermer</button>
             </div>
         </body>
         </html>
