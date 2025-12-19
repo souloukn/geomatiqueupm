@@ -2234,7 +2234,7 @@ function exportToPDF(exam, results) {
             </div>
 
             <div style="text-align: right; margin-top: 30px; font-size: 10pt; font-style: italic;">
-                <p>Fait à ${exam.university ? exam.university.split(' ')[0] : ''}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p>Fait à l'Université, le 19 décembre 2025</p>
             </div>
 
             <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
@@ -2321,21 +2321,6 @@ function exportToExcel(exam, results) {
             csvContent += `"${index + 1}","${student.lastname}","${student.firstname}","${student.id}","${student.gender}","N/A","N/A","${examGrade}","${participationGrade}","${finalGrade}","${percentage}%","${mention}","N/A"\n`;
         });
     }
-
-    // Add statistics section
-    csvContent += '\n"STATISTIQUES"\n';
-    const scores = results && results.length > 0 
-        ? results.map(r => (r.score / r.totalPoints) * 20)
-        : generateSampleStudentData().map(() => Math.random() * 20);
-    
-    const avgScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
-    const maxScore = Math.max(...scores).toFixed(2);
-    const minScore = Math.min(...scores).toFixed(2);
-    
-    csvContent += `"Moyenne de classe:","${avgScore}/20"\n`;
-    csvContent += `"Note maximale:","${maxScore}/20"\n`;
-    csvContent += `"Note minimale:","${minScore}/20"\n`;
-    csvContent += `"Nombre d'étudiants:","${scores.length}"\n`;
 
     // Create download link
     const encodedUri = encodeURI(csvContent);
@@ -2833,15 +2818,6 @@ function printResults() {
                 </tbody>
             </table>
 
-            <div class="statistics">
-                <h3>STATISTIQUES DE LA CLASSE</h3>
-                <p><strong>Nombre d'étudiants:</strong> ${results.length}</p>
-                <p><strong>Moyenne de classe:</strong> ${(results.reduce((sum, r) => sum + (r.score / r.totalPoints * 20), 0) / results.length).toFixed(2)}/20</p>
-                <p><strong>Note maximale:</strong> ${Math.max(...results.map(r => r.score / r.totalPoints * 20)).toFixed(2)}/20</p>
-                <p><strong>Note minimale:</strong> ${Math.min(...results.map(r => r.score / r.totalPoints * 20)).toFixed(2)}/20</p>
-                <p><strong>Taux de réussite:</strong> ${Math.round(results.filter(r => (r.score / r.totalPoints * 100) >= 50).length / results.length * 100)}%</p>
-            </div>
-
             <div class="signature-section">
                 <div class="signature-box">
                     <p><strong>Le Chef de Département</strong></p>
@@ -2856,7 +2832,7 @@ function printResults() {
             </div>
 
             <div class="date-section">
-                <p>Fait à ${exam.university ? exam.university.split(' ')[0] : ''}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p>Fait à l'Université, le 19 décembre 2025</p>
             </div>
 
             <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; background: #f0f0f0; border-radius: 5px;">
